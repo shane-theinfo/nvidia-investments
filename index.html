@@ -12,8 +12,8 @@
 :root{ --ink:#1a1a1a; --muted:#333333; --faint:#888888; --hair:#e7e8ea; }
 *{box-sizing:border-box}
 html,body{margin:0;background:#fff}
-#stage{margin:0 auto;overflow:visible}
-#wrap{width:650px;transform-origin:top left;background:#fff;color:var(--ink);
+#stage{margin:0 auto;max-width:650px}
+#wrap{width:100%;height:590px;display:flex;flex-direction:column;background:#fff;color:var(--ink);
   font-family:'Suisse Screen',-apple-system,Arial,sans-serif;-webkit-font-smoothing:antialiased;padding:18px 14px 14px;position:relative}
 .header-row{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin:0 0 8px}
 h1{font-family:'Suisse Works',Georgia,serif;font-weight:600;font-size:26px;line-height:1.12;margin:0;color:var(--ink);-webkit-text-stroke:.4px currentColor}
@@ -23,8 +23,9 @@ h1{font-family:'Suisse Works',Georgia,serif;font-weight:600;font-size:26px;line-
 .legend button{all:unset;cursor:pointer;display:flex;align-items:center;gap:8px;line-height:1.25}
 .legend .n{color:var(--faint);margin-left:2px}
 .sw{width:12px;height:12px;flex:0 0 12px;display:inline-block}
-.grid{display:grid;grid-template-columns:repeat(10,1fr);gap:4px}
-.b{aspect-ratio:1/1;cursor:pointer;transition:opacity .15s;outline:none}
+.header-row,.sub,.legend,.foot{flex:0 0 auto}
+.grid{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;flex:1 1 0;min-height:0}
+.b{cursor:pointer;transition:opacity .15s;outline:none}
 .b:focus-visible{outline:2px solid var(--ink);outline-offset:1px}
 .dim .b:not(.on){opacity:.18}
 #tip{position:absolute;z-index:5;pointer-events:none;background:#fff;border:1px solid var(--ink);padding:9px 11px;font-size:13px;line-height:1.4;color:var(--muted);min-width:170px;box-shadow:0 2px 8px rgba(0,0,0,.12);display:none}
@@ -33,6 +34,14 @@ h1{font-family:'Suisse Works',Georgia,serif;font-weight:600;font-size:26px;line-
 #tip hr{border:0;border-top:1px solid var(--hair);margin:5px 0}
 #tip .c{display:flex;align-items:center;gap:6px}
 .foot{margin-top:10px;font-size:12.5px;line-height:1.45;color:var(--faint);text-align:right}
+@media (max-width:479px){
+  #wrap{padding:14px 12px 12px}
+  h1{font-size:23px;letter-spacing:-.2px}
+  .logo{height:18px;margin-top:2px}
+  .sub{font-size:14.5px}
+  .legend{grid-template-columns:1fr;gap:4px}
+  .foot{text-align:left;margin-top:8px}
+}
 </style>
 </head>
 <body>
@@ -86,10 +95,16 @@ Object.entries(CATS).forEach(([k,c])=>{
   el.onmouseenter=on; el.onmouseleave=off; el.onfocus=on; el.onblur=off;
   legend.appendChild(el);
 });
-const stage=document.getElementById("stage");
-function fit(){ const k=Math.min(1,document.documentElement.clientWidth/650);
-  wrap.style.transform=k<1?`scale(${k})`:"none"; stage.style.width=650*k+"px"; stage.style.height=wrap.offsetHeight*k+"px"; }
-addEventListener("resize",fit); addEventListener("load",fit); fit();
+const TARGET=590;
+function layout(){
+  wrap.style.height=Math.min(window.innerHeight||TARGET,TARGET)+"px";
+  const g=parseFloat(getComputedStyle(grid).columnGap)||4, W=grid.clientWidth, H=grid.clientHeight, n=DATA.length;
+  let best=null;
+  for(let c=5;c<=10;c++){ const rows=Math.ceil(n/c), cw=(W-(c-1)*g)/c, rh=(H-(rows-1)*g)/rows;
+    if(rh<=0) continue; const sc=Math.abs(Math.log(cw/rh)); if(!best||sc<best.sc) best={c,rows,sc}; }
+  if(best){ grid.style.gridTemplateColumns=`repeat(${best.c},1fr)`; grid.style.gridTemplateRows=`repeat(${best.rows},1fr)`; }
+}
+addEventListener("resize",layout); addEventListener("load",layout); if(document.fonts&&document.fonts.ready) document.fonts.ready.then(layout); layout();
 </script>
 </body>
 </html>
